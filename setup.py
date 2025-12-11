@@ -40,15 +40,37 @@ def check_vllm():
         return False
 
 
-def download_model(model_id: str, local_dir: str):
-    """Download model from ModelScope."""
+def download_model(model_id: str, local_dir: str, use_huggingface: bool = True):
+    """Download model from Hugging Face or ModelScope."""
     print(f"\nDownloading {model_id}...")
     print(f"Target directory: {local_dir}")
     
+    # Map ModelScope IDs to Hugging Face IDs
+    hf_model_map = {
+        "iic/CosyVoice2-0.5B": "FunAudioLLM/CosyVoice2-0.5B",
+    }
+    
+    if use_huggingface:
+        hf_model_id = hf_model_map.get(model_id, model_id)
+        print(f"Using Hugging Face: {hf_model_id}")
+        try:
+            from huggingface_hub import snapshot_download as hf_download
+            hf_download(
+                repo_id=hf_model_id,
+                local_dir=local_dir,
+                local_dir_use_symlinks=False
+            )
+            print(f"✓ Model downloaded successfully from Hugging Face")
+            return True
+        except Exception as e:
+            print(f"✗ Hugging Face download failed: {e}")
+            print("Falling back to ModelScope...")
+    
+    # Try ModelScope as fallback
     try:
         from modelscope import snapshot_download
         snapshot_download(model_id, local_dir=local_dir)
-        print(f"✓ Model downloaded successfully")
+        print(f"✓ Model downloaded successfully from ModelScope")
         return True
     except Exception as e:
         print(f"✗ Failed to download model: {e}")
