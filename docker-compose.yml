@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  cosyvoice-tts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cosyvoice-tts:latest
+    container_name: cosyvoice-tts-server
+    
+    # GPU configuration
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    
+    # Port mapping
+    ports:
+      - "8000:8000"      # Main API
+      - "9090:9090"      # Prometheus metrics (optional)
+    
+    # Environment variables
+    environment:
+      - MODEL_PATH=/app/models/CosyVoice2-0.5B
+      - USE_VLLM=true
+      - USE_JIT=true
+      - USE_TRT=false
+      - USE_FP16=true
+      - SPEAKER_CACHE_SIZE=100
+      - SPEAKER_PERSIST_PATH=/app/data/speakers
+      - LOAD_MODEL_ON_STARTUP=true
+      - CUDA_VISIBLE_DEVICES=0
+    
+    # Volume mounts
+    volumes:
+      # Model weights (persistent)
+      - ./pretrained_models:/app/models:ro
+      # Speaker data (persistent)
+      - ./data:/app/data
+      # Logs
+      - ./logs:/app/logs
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Optional: Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cosyvoice-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - cosyvoice-tts
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+  # Optional: Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cosyvoice-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+volumes:
+  grafana-data:
+
+networks:
+  default:
+    name: cosyvoice-network

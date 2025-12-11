@@ -1,0 +1,41 @@
+# Model configuration
+model:
+  path: "pretrained_models/CosyVoice2-0.5B"
+  use_vllm: true
+  use_jit: true
+  use_trt: false  # Set to true if TensorRT is installed
+  fp16: true
+  device: "cuda"
+
+# Server configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+  cors_origins: ["*"]
+
+# Request batching
+batching:
+  enabled: true
+  max_batch_size: 8
+  timeout_ms: 100
+
+# Speaker cache
+cache:
+  speaker_cache_size: 100
+  speaker_persist_path: "data/speakers"
+
+# Authentication (optional)
+auth:
+  enabled: false
+  api_keys: []
+
+# Monitoring
+monitoring:
+  prometheus_enabled: true
+  metrics_port: 9090
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
