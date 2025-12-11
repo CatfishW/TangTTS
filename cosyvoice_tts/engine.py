@@ -112,6 +112,17 @@ class CosyVoiceTTSEngine:
             from cosyvoice.utils.file_utils import load_wav
             
             self._load_wav = load_wav
+            # Check for JIT model existence if requested
+            if self.config.use_jit:
+                jit_suffix = 'fp16' if self.config.fp16 else 'fp32'
+                jit_filename = f"flow.encoder.{jit_suffix}.zip"
+                jit_path = os.path.join(self.config.model_path, jit_filename)
+                
+                if not os.path.exists(jit_path):
+                    logger.warning(f"JIT model {jit_filename} not found at {jit_path}. "
+                                   "Falling back to standard loading (JIT disabled).")
+                    self.config.use_jit = False
+
             self._model = CosyVoice2(
                 self.config.model_path,
                 load_jit=self.config.use_jit,
