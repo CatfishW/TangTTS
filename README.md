@@ -17,11 +17,8 @@ A highly optimized Text-to-Speech server based on CosyVoice2-0.5B with vLLM acce
 # Install dependencies
 pip install -r requirements.txt
 
-# Download model (Hugging Face - recommended)
-python -c "from huggingface_hub import snapshot_download; snapshot_download('FunAudioLLM/CosyVoice2-0.5B', local_dir='pretrained_models/CosyVoice2-0.5B', local_dir_use_symlinks=False)"
-
-# Or use ModelScope (alternative)
-# python -c "from modelscope import snapshot_download; snapshot_download('iic/CosyVoice2-0.5B', local_dir='pretrained_models/CosyVoice2-0.5B')"
+# Download model
+python -c "from modelscope import snapshot_download; snapshot_download('iic/CosyVoice2-0.5B', local_dir='pretrained_models/CosyVoice2-0.5B')"
 
 # Start server
 python run_server.py

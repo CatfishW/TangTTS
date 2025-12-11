@@ -75,12 +75,21 @@ class CosyVoiceTTSEngine:
                    f"TRT={self.config.use_trt}, FP16={self.config.fp16}")
         
         # Add paths for CosyVoice imports
-        cosyvoice_path = Path(self.config.model_path).parent.parent
-        matcha_path = cosyvoice_path / "third_party" / "Matcha-TTS"
+        # First try: look for CosyVoice repo in the project root
+        project_root = Path(__file__).parent.parent
+        cosyvoice_repo = project_root / "CosyVoice"
+        
+        if cosyvoice_repo.exists():
+            cosyvoice_path = cosyvoice_repo
+            matcha_path = cosyvoice_repo / "third_party" / "Matcha-TTS"
+        else:
+            # Fallback: relative to model path
+            cosyvoice_path = Path(self.config.model_path).parent.parent
+            matcha_path = cosyvoice_path / "third_party" / "Matcha-TTS"
         
         if str(cosyvoice_path) not in sys.path:
             sys.path.insert(0, str(cosyvoice_path))
-        if str(matcha_path) not in sys.path:
+        if matcha_path.exists() and str(matcha_path) not in sys.path:
             sys.path.insert(0, str(matcha_path))
         
         # Register vLLM model if using vLLM
