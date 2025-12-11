@@ -98,7 +98,10 @@ class CosyVoiceTTSEngine:
                 from vllm import ModelRegistry
                 from cosyvoice.vllm.cosyvoice2 import CosyVoice2ForCausalLM
                 ModelRegistry.register_model("CosyVoice2ForCausalLM", CosyVoice2ForCausalLM)
-                logger.info("Registered CosyVoice2ForCausalLM with vLLM")
+                # Force Qwen2ForCausalLM to use CosyVoice2 implementation
+                # This is necessary because the model config likely specifies "Qwen2ForCausalLM"
+                ModelRegistry.register_model("Qwen2ForCausalLM", CosyVoice2ForCausalLM)
+                logger.info("Registered CosyVoice2ForCausalLM with vLLM (and overrided Qwen2ForCausalLM)")
             except ImportError as e:
                 logger.warning(f"vLLM not available, falling back: {e}")
                 self.config.use_vllm = False
